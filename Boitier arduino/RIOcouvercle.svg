@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="72mm"
+   height="57mm"
+   viewBox="0 0 72 57"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   sodipodi:docname="RIOplexi.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="2.1409939"
+     inkscape:cx="141.05598"
+     inkscape:cy="85.240785"
+     inkscape:window-width="1368"
+     inkscape:window-height="850"
+     inkscape:window-x="-6"
+     inkscape:window-y="-6"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-33.928735,-109.4372)">
+    <rect
+       style="fill:none;stroke:#ff0000;stroke-width:0.103246;stroke-dasharray:none;stroke-opacity:1"
+       id="rect234"
+       width="71.896751"
+       height="56.896755"
+       x="33.980358"
+       y="109.48882" />
+    <circle
+       style="fill:none;stroke:#ff0000;stroke-width:0.1;stroke-dasharray:none;stroke-opacity:1"
+       id="path5469"
+       cx="48.928814"
+       cy="136.93729"
+       r="10" />
+  </g>
+</svg>
