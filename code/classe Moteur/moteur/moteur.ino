@@ -1,6 +1,7 @@
 #include <TimerOne.h>
 #include <struc_moteur.h>
 #include "CapteurDistance.h"
+#include "CameraPosition.h"
 
 //definition constante 
 const int deltaTime = 20;
@@ -28,6 +29,10 @@ const int echo = 13;
 const int trig = 12;
 
 CapteurDistance capteurDistance (trig, echo);
+
+CameraPosition cameraPosition(13);
+
+
 
 
 //initialisation du moteur gauche 
@@ -152,10 +157,14 @@ void eviterObstacle(){
 
 void loop() {
   //capteurDistance.CapturerDistance();
-  goFront();
-  setVitesseMoteurD(255);
-  setVitesseMoteurG(255);
+  //goFront();
+  //setVitesseMoteurD(255);
+  //setVitesseMoteurG(255);
   //eviterObstacle();
+  cameraPosition.motionBurst();
+  Serial.print(cameraPosition.getX());
+  Serial.println(cameraPosition.getY());
+  
 
   
   
