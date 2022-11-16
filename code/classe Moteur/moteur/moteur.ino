@@ -28,6 +28,8 @@ const int IND2 = 7;
 const int echo = 13;
 const int trig = 12;
 
+const int pinLedRougeCamera = 13;
+
 CapteurDistance capteurDistance (trig, echo);
 
 CameraPosition cameraPosition(13);

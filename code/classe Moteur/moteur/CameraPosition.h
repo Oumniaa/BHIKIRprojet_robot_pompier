@@ -1,8 +1,6 @@
 #ifndef H_CameraPosition
 #define H_CameraPosition
 
-
-
 class CameraPosition
 {
   private :
