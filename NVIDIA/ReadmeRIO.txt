@@ -24,12 +24,14 @@ mysql> exit
 
 aller voir le script
 
+mkdir log
+
 script.sh
 #!/bin/bash
 date_stamp=$(date +"%F-%H-%M-%S")
 
-mysqldump -u gui -p classicmodels | bzip2 -c > $date_stamp.sql.bz2
-find * -mtime 50 rm {} \;
+mysqldump -u gui -p classicmodels | bzip2 -c > /log/$date_stamp.sql.bz2
+find /log/* -mtime 50 rm {} \;
 
 TD1.service
 [Unit]
