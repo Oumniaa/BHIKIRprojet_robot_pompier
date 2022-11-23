@@ -6,7 +6,8 @@
 
 ##	Création d'un utilisateur avec tous les privilèges
     
-    sudo mysql -u root /: Connection à mysql 
+    sudo mysql -u root 
+    # Connection à mysql 
     mysql> CREATE USER 'oumnia'@'localhost' IDENTIFIED BY 'mot_de_passe'
     mysql> GRANT ALL PRIVILEGES ON * . * TO 'oumnia'@'localhost';
     mysql> FLUSH PRIVILEGES;
@@ -23,7 +24,7 @@
  
 ## Telechargement de la database
 
-    wget[https://www.mysqltutorial.org/wp-content/uploads/2018/03/mysqlsampledatabase.zip] 
+    wget https://www.mysqltutorial.org/wp-content/uploads/2018/03/mysqlsampledatabase.zip 
 
     mysql> source /home/oumnia/mysqlsampledatabase.sql
     # importation de la base de donnée
@@ -116,5 +117,7 @@ Notifempty
  # empêche de la rotation si fichier vide
 Creat 644 root root                        
  # création d’un fichier après la rotation des logs
-Size 100M}
+Size 100M
+# l'espace alloué est de 100M
+}
 
