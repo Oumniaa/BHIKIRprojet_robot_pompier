@@ -100,10 +100,17 @@ Sudo systemctl start save.timer
 ```
 ![](Annexes/A2.png)
 
-## Sortie log
+## Proposition pour la gestion d'espace du fichier .log 
 ```
-Proposition pour la gestion d'espace du fichier .log 
-Sudo touch /var/log/dump-mysql.log
+
+# On commence par créer un répertoire pour avoir les droits de modification 
+
+ mkdir dump-database
+ sudo mv /var/log/dump-mysql.log dump-database
+```
+
+```
+# Dans le fichier .log 
 /var/log/dump-mysql.log {
 Monthly
 Rotate 12                                              
