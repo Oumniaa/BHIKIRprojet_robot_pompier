@@ -106,6 +106,7 @@ Sudo systemctl start save.timer
 # On commence par créer un répertoire pour avoir les droits de modification 
 
  mkdir dump-database
+ sudo chmod +777 dump-database
  sudo mv /var/log/dump-mysql.log dump-database
 ```
 
