@@ -5,19 +5,21 @@
   
 
 ##	Création d'un utilisateur avec tous les privilèges
-     
+    
     sudo mysql -u root /: Connection à mysql 
     mysql> CREATE USER 'oumnia'@'localhost' IDENTIFIED BY 'mot_de_passe'
     mysql> GRANT ALL PRIVILEGES ON * . * TO 'oumnia'@'localhost';
     mysql> FLUSH PRIVILEGES;
     mysql>exit
-
     //  l'utilisateur oumnia a maintenant tout les droits.
+    
 
-    mysql> alter user oumnia@localhost identified with auth_socket;
+  ```
+ mysql> alter user oumnia@localhost identified with auth_socket;
 
     //pour faire fonctionner mon service sinon on demande le mot
      de passe à chaque fois.
+ ```
  
 ## Telechargement de la database
 
@@ -89,7 +91,7 @@ WantedBy=timers.target
 // la sauvegarde se fait chaque 10 min
 ```
 ```
-Pour le lancer
+//Pour le lancer
 Sudo systemctl daemon-reload
 Sudo systemctl enable save.timer
 Sudo systemctl start save.timer
