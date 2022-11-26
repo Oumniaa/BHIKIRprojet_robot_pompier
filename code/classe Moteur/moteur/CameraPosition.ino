@@ -10,9 +10,6 @@ ADNS3080 <PIN_RESET, PIN_CS> sensor;
 
 // Initial position
 
-
-int pinLEDRouge = 40;
-
 CameraPosition::CameraPosition(int pinLedRouge ) {
   this->pinLedRouge = pinLedRouge;
   this->x = 0;
@@ -20,7 +17,7 @@ CameraPosition::CameraPosition(int pinLedRouge ) {
   
   
   sensor.setup( LED_MODE, RESOLUTION );
-  pinMode(pinLEDRouge, OUTPUT);
+  pinMode(this->pinLedRouge, OUTPUT);
   Serial.begin(9600);
 }
 
@@ -29,6 +26,11 @@ void CameraPosition::motionBurst(){
   this->x += dx;
   this->y += dy;
 }
+
+void  CameraPosition::upLed(){
+  digitalWrite(this->pinLedRouge, HIGH);
+}
+
 
 int CameraPosition::getX(){
   return this->x;

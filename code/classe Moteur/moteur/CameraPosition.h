@@ -19,6 +19,7 @@ class CameraPosition
     void motionBurst();
     int getX();
     int getY();
+    void upLed();
     
 };
 

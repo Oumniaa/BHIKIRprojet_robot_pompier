@@ -28,11 +28,11 @@ const int IND2 = 7;
 const int echo = 13;
 const int trig = 12;
 
-const int pinLedRougeCamera = 13;
+const int pinLedRougeCamera = 48;
 
 CapteurDistance capteurDistance (trig, echo);
 
-CameraPosition cameraPosition(13);
+CameraPosition cameraPosition(pinLedRougeCamera);
 
 
 
@@ -158,13 +158,16 @@ void eviterObstacle(){
 
 
 void loop() {
-  //capteurDistance.CapturerDistance();
-  //goFront();
-  //setVitesseMoteurD(255);
-  //setVitesseMoteurG(255);
-  //eviterObstacle();
+  capteurDistance.CapturerDistance();
+  goFront();
+  setVitesseMoteurD(255);
+  setVitesseMoteurG(255);
+  eviterObstacle();
+  cameraPosition.upLed();
   cameraPosition.motionBurst();
-  Serial.print(cameraPosition.getX());
+  Serial.print("x : ");
+  Serial.println(cameraPosition.getX());
+  Serial.print("y : ");
   Serial.println(cameraPosition.getY());
   
 

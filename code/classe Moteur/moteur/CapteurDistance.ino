@@ -15,4 +15,5 @@ void CapteurDistance::CapturerDistance(){
     calcul_echo = pulseIn(echo,HIGH);
     delay(100);
     distance = calcul_echo*0.034/2;
+    Serial.println(distance);
 }
