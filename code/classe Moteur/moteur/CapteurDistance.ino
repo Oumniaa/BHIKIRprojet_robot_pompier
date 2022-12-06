@@ -1,6 +1,5 @@
 #include "CapteurDistance.h"
 
-
 CapteurDistance::CapteurDistance( int trig, int echo){
   this->trig = trig; // on commence toujours par constructeur et le this pour préciser que le trug d'en bas metionne celui d'en haut
   this->echo = echo;

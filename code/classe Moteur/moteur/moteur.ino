@@ -2,6 +2,7 @@
 #include <struc_moteur.h>
 #include "CapteurDistance.h"
 #include "CameraPosition.h"
+#include "CapteurLaser.h"
 
 //definition constante 
 const int deltaTime = 20;
@@ -34,8 +35,7 @@ CapteurDistance capteurDistance (trig, echo);
 
 CameraPosition cameraPosition(pinLedRougeCamera);
 
-
-
+CapteurLaser capteurLaser;
 
 //initialisation du moteur gauche 
 struct Moteur moteurG = { 
@@ -142,12 +142,17 @@ void setVitesseMoteurG(int vit){
   analogWrite(moteurG.pinEnable, vit);
 }
 
-
+//main 
 void eviterObstacle(){
-  int time90 = 1000;
+  int timeBack = 3000;
+  int timeRight = 2000;
   while(true){
     if(capteurDistance.distance < 10){
-      stopM();
+      int time_now = millis();    
+      while(millis() < time_now + timeBack){
+        turnR();
+      }
+      goFront();
     }else{
       break;
     }
@@ -158,18 +163,26 @@ void eviterObstacle(){
 
 
 void loop() {
+  
+  //capteur ultrason
   capteurDistance.CapturerDistance();
+  //capteur laser
+  capteurLaser.capturerDistanceLaser();
+  
+  //sens des moteurs
   goFront();
+  //vitesse
   setVitesseMoteurD(255);
   setVitesseMoteurG(255);
+  //stratégie
   eviterObstacle();
+  //position 
   cameraPosition.upLed();
   cameraPosition.motionBurst();
   Serial.print("x : ");
   Serial.println(cameraPosition.getX());
   Serial.print("y : ");
   Serial.println(cameraPosition.getY());
-  
 
   
   
