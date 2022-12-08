@@ -57,7 +57,7 @@ void eviterObstacle(){
 
 
 void loop() {
-  /*
+  
   //capteur ultrason
   capteurDistance.CapturerDistance();
   //capteur laser
@@ -74,7 +74,7 @@ void loop() {
   Serial.print("x : ");
   Serial.println(cameraPosition.getX());
   Serial.print("y : ");
-  Serial.println(cameraPosition.getY());*/
+  Serial.println(cameraPosition.getY());
   controleMoteur.goRight(vitesse);
 
   
