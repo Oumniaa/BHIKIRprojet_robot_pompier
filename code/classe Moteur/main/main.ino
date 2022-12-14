@@ -33,7 +33,7 @@ void setup() {
 
 
 
-int vitesse = 100;
+int vitesse = 250;
 
 
 //main 
@@ -72,10 +72,10 @@ void loop() {
   cameraPosition.upLed();
   cameraPosition.motionBurst();
   Serial.print("x : ");
-  Serial.println(cameraPosition.getX());
+  Serial.print(cameraPosition.getX());
   Serial.print("y : ");
   Serial.println(cameraPosition.getY());
-  controleMoteur.goRight(vitesse);
+  controleMoteur.goForward(vitesse);
 
   
   

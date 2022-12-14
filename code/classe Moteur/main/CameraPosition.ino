@@ -22,7 +22,6 @@ CameraPosition::CameraPosition(int pinLedRouge ) {
   
   sensor.setup( LED_MODE, RESOLUTION );
   pinMode(this->pinLedRouge, OUTPUT);
-  Serial.begin(9600);
 }
 
 /**
@@ -39,8 +38,8 @@ CameraPosition::CameraPosition(int pinLedRouge ) {
  */
 void CameraPosition::motionBurst(){
   sensor.motionBurst( &this->motion, &this->over_flow, &this->dx, &this->dy, &this->squal, &this->shutter, &this->max_pixel );
-  this->x += dx;
-  this->y += dy;
+  this->x -= dy;//on inverse car la caméra est placé dans ce sens là sur le robot
+  this->y += dx;
 }
 
 /**
