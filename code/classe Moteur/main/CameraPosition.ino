@@ -38,20 +38,21 @@ CameraPosition::CameraPosition(int pinLedRouge ) {
  */
 void CameraPosition::motionBurst(){
   sensor.motionBurst( &this->motion, &this->over_flow, &this->dx, &this->dy, &this->squal, &this->shutter, &this->max_pixel );
-  this->x -= dy;//on inverse car la caméra est placé dans ce sens là sur le robot
-  this->y += dx;
+  this->x -= dy/10;//on inverse car la caméra est placé dans ce sens là sur le robot
+  this->y += dx/10;//on divise par 10 pour passé en cm 
 }
 
 /**
  * Methode afin d'allumer la led rouge afin de faire fonctionnner mieux la caméra
  */
 void  CameraPosition::upLed(){
-  if (this->motion == 0){
-    digitalWrite(this->pinLedRouge, HIGH);
-  }else{
-    digitalWrite(this->pinLedRouge, LOW);
-  }
-  
+  digitalWrite(this->pinLedRouge, HIGH);
+}
+/**
+ * Methode afin d'allumer la led rouge afin de faire fonctionnner mieux la caméra
+ */
+void  CameraPosition::downLed(){
+  digitalWrite(this->pinLedRouge, LOW);
 }
 
 

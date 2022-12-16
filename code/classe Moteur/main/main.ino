@@ -33,7 +33,7 @@ void setup() {
 
 
 
-int vitesse = 250;
+int vitesse = 120;
 
 
 //main 
@@ -41,41 +41,55 @@ void eviterObstacle(){
   int timeBack = 3000;
   int timeRight = 2000;
   while(true){
-    if(capteurDistance.distance < 10){
+    if(capteurLaser.mesureLaser < 25){
       int time_now = millis();    
       while(millis() < time_now + timeBack){
+        controleMoteur.goBack(vitesse);
+      }
+      time_now = millis(); 
+      while(millis() < time_now + timeRight){
         controleMoteur.goRight(vitesse);
       }
       controleMoteur.goForward(vitesse);
     }else{
       break;
     }
-    capteurDistance.CapturerDistance();
-  }
-  
+    capteurLaser.capturerDistanceLaser();
+  } 
 }
 
-
+int tmp = 0;
 void loop() {
+  tmp+=1;
+
   
   //capteur ultrason
-  capteurDistance.CapturerDistance();
+  //capteurDistance.CapturerDistance();
+
+  
   //capteur laser
+  
   capteurLaser.capturerDistanceLaser();
 
 
   //stratégie
-  //eviterObstacle();
 
   
   //position 
+  Serial.print("x : ");
+  Serial.println(cameraPosition.getX());
+  Serial.print(" y : ");
+  Serial.println(cameraPosition.getY());
+  Serial.print(" laser : ");
+  Serial.println(capteurLaser.mesureLaser);
   cameraPosition.upLed();
   cameraPosition.motionBurst();
-  Serial.print("x : ");
-  Serial.print(cameraPosition.getX());
-  Serial.print("y : ");
-  Serial.println(cameraPosition.getY());
+
   controleMoteur.goForward(vitesse);
+  eviterObstacle();
+  
+  
+  
 
   
   

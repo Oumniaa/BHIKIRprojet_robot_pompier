@@ -20,6 +20,7 @@ class CameraPosition
     int getX();
     int getY();
     void upLed();
+    void downLed();
     
 };
 

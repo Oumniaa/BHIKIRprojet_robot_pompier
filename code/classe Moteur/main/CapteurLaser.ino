@@ -10,6 +10,7 @@ CapteurLaser::CapteurLaser() {
 
  
 void CapteurLaser::capturerDistanceLaser() {
+  
   capteur.begin();
   capteur.rangingTest(&mesure, false); // 'true' informations de debuggage
   // RangeStatus = 4 signifie que le mesure est erronée
@@ -19,5 +20,4 @@ void CapteurLaser::capturerDistanceLaser() {
   else {
     mesureLaser = -1;
   }
-  mesureLaser = -1;
 }
