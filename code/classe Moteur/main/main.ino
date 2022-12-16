@@ -27,7 +27,7 @@ ControleMoteur controleMoteur(M1A,M1B,M2A,M2B);
 
 void setup() {
   //initialisation du serial 
-  Serial.begin(57600);
+  Serial.begin(9600);
 }
 
 
@@ -68,27 +68,36 @@ void loop() {
 
   
   //capteur laser
-  
-  capteurLaser.capturerDistanceLaser();
+  //capteurLaser.capturerDistanceLaser();
 
 
   //stratégie
 
   
   //position 
-  Serial.print("x : ");
+  /*Serial.print("x : ");
   Serial.println(cameraPosition.getX());
   Serial.print(" y : ");
   Serial.println(cameraPosition.getY());
   Serial.print(" laser : ");
-  Serial.println(capteurLaser.mesureLaser);
-  cameraPosition.upLed();
+  Serial.println(capteurLaser.mesureLaser);*/
+  if (Serial.available() > 0) {
+    String a= Serial.readString();
+    if(a.equals("test\n")){
+      cameraPosition.upLed();
+    }
+  }
+  
+  
+
+  //Serial.print("toto");
+  /*
   cameraPosition.motionBurst();
 
   controleMoteur.goForward(vitesse);
   eviterObstacle();
   
-  
+  */
   
 
   
