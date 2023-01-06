@@ -1,8 +1,5 @@
 #include "ControleMoteur.h"
 
-
-
-
 ControleMoteur::ControleMoteur(int M1A, int M1B, int M2A, int M2B) {
   this->m1.pinMA = M1A;
   this->m1.pinMB = M1B;

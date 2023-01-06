@@ -27,6 +27,7 @@ ControleMoteur controleMoteur(M1A,M1B,M2A,M2B);
 
 void setup() {
   //initialisation du serial 
+  Serial3.begin(9600);
   Serial.begin(9600);
 }
 
@@ -58,9 +59,17 @@ void eviterObstacle(){
   } 
 }
 
+void uartSendMsg(String msg, boolean doFlush=false){
+  if(doFlush){
+    Serial3.flush();
+  }
+  Serial3.print(msg + "\n"); 
+}
+
+
 int tmp = 0;
 void loop() {
-  tmp+=1;
+  //tmp+=1;
 
   
   //capteur ultrason
@@ -81,28 +90,33 @@ void loop() {
   Serial.println(cameraPosition.getY());
   Serial.print(" laser : ");
   Serial.println(capteurLaser.mesureLaser);*/
-  if (Serial.available() > 0) {
-    String a= Serial.readString();
-    if(a.equals("test\n")){
+
+
+  //Communication UART
+  /*uartSendMsg("test",true);
+  delay(3000);*/
+  delay(1000);
+  Serial.println(Serial3.read(),HEX);
+  /*
+  while(Serial3.available() > 0) {
+    String msg= Serial3.readString();
+    cameraPosition.upLed();
+    uartSendMsg(msg,true);
+    if(msg.equals("test\n")){
       cameraPosition.upLed();
     }
-  }
+  }*/
   
-  
-
-  //Serial.print("toto");
-  /*
+/*
   cameraPosition.motionBurst();
 
   controleMoteur.goForward(vitesse);
   eviterObstacle();
   
   */
-  
-
-  
-  
 }
+
+
 
 
  
