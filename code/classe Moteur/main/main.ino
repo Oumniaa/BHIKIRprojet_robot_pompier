@@ -77,7 +77,7 @@ void loop() {
 
   
   //capteur laser
-  //capteurLaser.capturerDistanceLaser();
+  capteurLaser.capturerDistanceLaser();
 
 
   //stratégie
@@ -93,10 +93,12 @@ void loop() {
 
 
   //Communication UART
-  /*uartSendMsg("test",true);
-  delay(3000);*/
+  /*
+  uartSendMsg("test",true);
+  delay(3000);
   delay(1000);
   Serial.println(Serial3.read(),HEX);
+  */
   /*
   while(Serial3.available() > 0) {
     String msg= Serial3.readString();
@@ -106,14 +108,15 @@ void loop() {
       cameraPosition.upLed();
     }
   }*/
-  
-/*
-  cameraPosition.motionBurst();
 
+
+  
+
+  cameraPosition.motionBurst();
   controleMoteur.goForward(vitesse);
   eviterObstacle();
   
-  */
+  
 }
 
 
