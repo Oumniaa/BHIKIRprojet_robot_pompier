@@ -25,6 +25,12 @@ CapteurLaser capteurLaser;
 ControleMoteur controleMoteur(M1A,M1B,M2A,M2B);
 
 
+
+/**
+ * setup
+ * 
+ * Initialise les communications series.
+ */
 void setup() {
   //initialisation du serial 
   Serial3.begin(9600);
@@ -37,19 +43,31 @@ void setup() {
 int vitesse = 120;
 
 
-//main 
+/**
+ * eviterObstacle
+ * 
+ * Fonction définissant la stratégie afin déviter un obstacle. 
+ * On va reculer timeBack ms et tourner à droite pendant timeRight ms.
+ */
 void eviterObstacle(){
-  int timeBack = 3000;
-  int timeRight = 2000;
+  unsigned int timeBack = 2000;
+  unsigned int timeRight = 2000;
   while(true){
-    if(capteurLaser.mesureLaser < 25){
-      int time_now = millis();    
+    if(capteurLaser.mesureLaser < 45 && capteurLaser.mesureLaser > 0){
+      unsigned int time_now = millis();
+      Serial.print("time_now = ");  
+      Serial.println(time_now);  
+      Serial.print("time_now + timeBack = ");  
+      Serial.println(time_now + timeBack);  
+      controleMoteur.goBack(vitesse);  
       while(millis() < time_now + timeBack){
-        controleMoteur.goBack(vitesse);
+        
       }
       time_now = millis(); 
+      Serial.print("right ");
+      controleMoteur.goRight(vitesse);  
       while(millis() < time_now + timeRight){
-        controleMoteur.goRight(vitesse);
+        
       }
       controleMoteur.goForward(vitesse);
     }else{
@@ -58,6 +76,14 @@ void eviterObstacle(){
     capteurLaser.capturerDistanceLaser();
   } 
 }
+
+/**
+ * uartSendMsg
+ * 
+ * Envoyer un message dans UART 3
+ * 
+ * 
+ */
 
 void uartSendMsg(String msg, boolean doFlush=false){
   if(doFlush){
@@ -68,7 +94,16 @@ void uartSendMsg(String msg, boolean doFlush=false){
 
 
 int tmp = 0;
+
+
+/**
+ * Fontion main 
+ * 
+ * Lancent les différentes fonctions afin de controller le robot
+ */
+
 void loop() {
+  
   //tmp+=1;
 
   
@@ -84,12 +119,13 @@ void loop() {
 
   
   //position 
-  /*Serial.print("x : ");
+  Serial.print("x : ");
   Serial.println(cameraPosition.getX());
   Serial.print(" y : ");
   Serial.println(cameraPosition.getY());
   Serial.print(" laser : ");
-  Serial.println(capteurLaser.mesureLaser);*/
+  Serial.println(capteurLaser.mesureLaser);
+  Serial.flush();
 
 
   //Communication UART
@@ -108,9 +144,8 @@ void loop() {
       cameraPosition.upLed();
     }
   }*/
-
-
   
+
 
   cameraPosition.motionBurst();
   controleMoteur.goForward(vitesse);
