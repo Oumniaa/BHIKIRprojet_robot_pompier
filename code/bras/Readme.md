@@ -1,0 +1,2 @@
+Dans un premier temps, tout les servomoteurs sont commandés avec un potentiomtre chacun. le servomoteur et le potentiomètre sont branchés à l’Arduino comme deux circuits différents, le potentiomètre se branche sur la PIN 5V, la PIN Gnd, et la PIN analogique A0. Le servomoteur se branche lui sur la PIN 5V, la PIN Gnd et la PIN 9 de l’Arduino.
+Ensuite la consigne sera envoyé avec à travers un module bluetooth HC-05 en connexion avec l'arduino.
