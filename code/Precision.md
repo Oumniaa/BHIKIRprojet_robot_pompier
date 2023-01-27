@@ -5,6 +5,6 @@ Nous rappelons que notre projet est un robot pompier roulant sur des chenilles a
  Un fichier moteur contenat la totalité des classes organisant la réception de la consigne (position) à travers les capteurs (laser,distance,module arduCam), le controles des moteurs (motor CC). 
  Un fichier Jetson nano contenant la totalité des commandes utilisées.
 
-  (robot.jpg "Photo Robot").
+  ![alt text](robot.jpg "Photo Robot").
 
-  (bras.jpg "Photo bras").
+  ![alt text](bras.jpg "Photo bras").
