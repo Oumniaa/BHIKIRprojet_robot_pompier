@@ -2,8 +2,7 @@ Nous rappelons que notre projet est un robot pompier roulant sur des chenilles a
  
  Un fichier dédié au bras robotque contenant les 2 codes source faisant bouger le bras (servomotors).
  Un fichier caméra.ino pour le fonctionnement du module cameraVga.
- Un fichier moteur contenat la totalité des classes organisant la réception de la consigne (position) à travers les capteurs (laser,distance,module arduCam), le controles des moteurs (motor CC). 
- Un fichier Jetson nano contenant la totalité des commandes utilisées.
+ Un fichier moteur contenat la totalité des classes organisant la réception de la consigne (position) à travers les capteurs (laser,distance,module arduCam), le controles des moteurs (motor CC). ainsi qu'un fichier Jetson nano contenant la totalité des commandes utilisées.
 
   ![alt text](robot.jpg "Photo Robot").
 
