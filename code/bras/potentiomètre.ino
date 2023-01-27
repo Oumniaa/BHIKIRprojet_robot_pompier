@@ -1,4 +1,4 @@
-#include <Servo.h> // fait appel à la bibliothèque Servo
+#include <Servo.h> // Call the library servo
 
 // create servo object to control a servo
 Servo servo1;
