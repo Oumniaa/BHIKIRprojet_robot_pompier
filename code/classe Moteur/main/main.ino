@@ -104,7 +104,6 @@ int tmp = 0;
 
 void loop() {
   
-  //tmp+=1;
 
   
   //capteur ultrason
@@ -113,19 +112,21 @@ void loop() {
   
   //capteur laser
   capteurLaser.capturerDistanceLaser();
+  Serial.println(capteurLaser.mesureLaser);
 
 
   //stratégie
 
   
   //position 
+  /*cameraPosition.upLed();
   Serial.print("x : ");
   Serial.println(cameraPosition.getX());
   Serial.print(" y : ");
   Serial.println(cameraPosition.getY());
   Serial.print(" laser : ");
   Serial.println(capteurLaser.mesureLaser);
-  Serial.flush();
+  Serial.flush();*/
 
 
   //Communication UART
@@ -145,11 +146,11 @@ void loop() {
     }
   }*/
   
-
+  /*
 
   cameraPosition.motionBurst();
   controleMoteur.goForward(vitesse);
-  eviterObstacle();
+  eviterObstacle();*/
   
   
 }
