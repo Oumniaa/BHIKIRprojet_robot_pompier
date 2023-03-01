@@ -32,9 +32,9 @@ ControleMoteur controleMoteur(M1A,M1B,M2A,M2B);
  * Initialise les communications series.
  */
 void setup() {
-  //initialisation du serial 
-  Serial3.begin(9600);
+  //initialisation du serial
   Serial.begin(9600);
+  cameraPosition.upLed();
 }
 
 
@@ -107,26 +107,26 @@ void loop() {
 
   
   //capteur ultrason
-  //capteurDistance.CapturerDistance();
+  capteurDistance.CapturerDistance();
 
   
   //capteur laser
   capteurLaser.capturerDistanceLaser();
-  Serial.println(capteurLaser.mesureLaser);
 
 
   //stratégie
 
   
   //position 
-  /*cameraPosition.upLed();
+  cameraPosition.motionBurst();
   Serial.print("x : ");
   Serial.println(cameraPosition.getX());
   Serial.print(" y : ");
   Serial.println(cameraPosition.getY());
   Serial.print(" laser : ");
   Serial.println(capteurLaser.mesureLaser);
-  Serial.flush();*/
+  Serial.print(" ultrason : ");
+  Serial.println(capteurDistance.distance);
 
 
   //Communication UART
@@ -148,7 +148,7 @@ void loop() {
   
   /*
 
-  cameraPosition.motionBurst();
+  
   controleMoteur.goForward(vitesse);
   eviterObstacle();*/
   
