@@ -40,7 +40,7 @@ void setup() {
 
 
 
-int vitesse = 120;
+int vitesse = 250;
 
 
 /**
@@ -105,7 +105,7 @@ int tmp = 0;
 void loop() {
   
 
-  
+ 
   //capteur ultrason
   capteurDistance.CapturerDistance();
 
@@ -128,7 +128,7 @@ void loop() {
   Serial.print(" ultrason : ");
   Serial.println(capteurDistance.distance);
 
-
+  
   //Communication UART
   /*
   uartSendMsg("test",true);
@@ -146,11 +146,11 @@ void loop() {
     }
   }*/
   
-  /*
+  
 
   
   controleMoteur.goForward(vitesse);
-  eviterObstacle();*/
+  //eviterObstacle();
   
   
 }
