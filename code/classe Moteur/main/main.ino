@@ -10,7 +10,6 @@ const int trig = 12;
 
 const int pinLedRougeCamera = 48;
 
-
 const int M2A = 4;
 const int M2B = 5;
 const int M1A = 6;
@@ -24,23 +23,32 @@ CapteurLaser capteurLaser;
 
 ControleMoteur controleMoteur(M1A,M1B,M2A,M2B);
 
+int vitesse = 250;
 
+const char TERMINATOR = '|';
+
+int valueRotationArc = 0;
+char sensRotationArc = 'a';
+boolean activateRotation = false;
 
 /**
  * setup
  * 
  * Initialise les communications series.
  */
+
 void setup() {
-  //initialisation du serial
-  Serial.begin(9600);
-  cameraPosition.upLed();
+  Serial.begin(115200);
+  while(!Serial){
+    ;
+  }
+  Serial3.begin(115200);
+  while(!Serial3){
+    ;
+  }
+  cameraPosition.upLed();  
 }
 
-
-
-
-int vitesse = 250;
 
 
 /**
@@ -77,23 +85,32 @@ void eviterObstacle(){
   } 
 }
 
-/**
- * uartSendMsg
- * 
- * Envoyer un message dans UART 3
- * 
- * 
- */
-
-void uartSendMsg(String msg, boolean doFlush=false){
-  if(doFlush){
-    Serial3.flush();
+int get_value_moteur(String msg){
+  String nb = "";
+  for(int i = 3; i < msg.length(); i++) {
+    nb.concat(msg.charAt(i));
   }
-  Serial3.print(msg + "\n"); 
+  return nb.toInt();
+}
+
+boolean decodage_commande_moteur(String msg){
+  int value;
+  if (msg.charAt(1) == 'd' | msg.charAt(1) == 'g' | msg.charAt(1) == 'a'){
+    activateRotation  = true;
+    sensRotationArc = msg.charAt(1);
+    valueRotationArc = get_value_moteur(msg);
+  } else{
+    return false;
+  }
 }
 
 
-int tmp = 0;
+boolean decodage_uart(String msg){
+  if (msg.charAt(0) == '1'){
+    return decodage_commande_moteur(msg);
+  }
+  return false;
+}
 
 
 /**
@@ -103,22 +120,37 @@ int tmp = 0;
  */
 
 void loop() {
+  //Communication UART
+  if (Serial3.available()) {
+    String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
+    Serial.println(commandFromJetson);
+    String message = "Hello jetson, voici le message que tu m'as envoye "+commandFromJetson +"\n";
+    Serial3.write(message.c_str(), message.length());
+
+    decodage_uart(commandFromJetson);
+  }
+
+  if(activateRotation){
+    Serial.println(valueRotationArc);
+    Serial.println(sensRotationArc);
+  }
+  
   
 
  
   //capteur ultrason
-  capteurDistance.CapturerDistance();
+  //capteurDistance.CapturerDistance();
 
   
   //capteur laser
-  capteurLaser.capturerDistanceLaser();
+  //capteurLaser.capturerDistanceLaser();
 
 
   //stratégie
 
   
   //position 
-  cameraPosition.motionBurst();
+  /*cameraPosition.motionBurst();
   Serial.print("x : ");
   Serial.println(cameraPosition.getX());
   Serial.print(" y : ");
@@ -126,30 +158,10 @@ void loop() {
   Serial.print(" laser : ");
   Serial.println(capteurLaser.mesureLaser);
   Serial.print(" ultrason : ");
-  Serial.println(capteurDistance.distance);
+  Serial.println(capteurDistance.distance);*/
 
   
-  //Communication UART
-  /*
-  uartSendMsg("test",true);
-  delay(3000);
-  delay(1000);
-  Serial.println(Serial3.read(),HEX);
-  */
-  /*
-  while(Serial3.available() > 0) {
-    String msg= Serial3.readString();
-    cameraPosition.upLed();
-    uartSendMsg(msg,true);
-    if(msg.equals("test\n")){
-      cameraPosition.upLed();
-    }
-  }*/
-  
-  
-
-  
-  controleMoteur.goForward(vitesse);
+  //controleMoteur.goForward(vitesse);
   //eviterObstacle();
   
   
