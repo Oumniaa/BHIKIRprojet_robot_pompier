@@ -85,6 +85,7 @@ void eviterObstacle(){
   } 
 }
 
+
 int get_value_moteur(String msg){
   String nb = "";
   for(int i = 3; i < msg.length(); i++) {
@@ -95,11 +96,15 @@ int get_value_moteur(String msg){
 
 boolean decodage_commande_moteur(String msg){
   int value;
-  if (msg.charAt(1) == 'd' | msg.charAt(1) == 'g' | msg.charAt(1) == 'a'){
+  if (msg.charAt(1) == 'd' | msg.charAt(1) == 'g'){
     activateRotation  = true;
     sensRotationArc = msg.charAt(1);
     valueRotationArc = get_value_moteur(msg);
-  } else{
+  } else if (msg.charAt(1) == 'a'){
+    activateRotation  = true;
+    sensRotationArc = msg.charAt(1);
+    valueRotationArc = 0;
+  } else {
     return false;
   }
 }
@@ -109,7 +114,32 @@ boolean decodage_uart(String msg){
   if (msg.charAt(0) == '1'){
     return decodage_commande_moteur(msg);
   }
+  if (msg.equals("distance")){
+    capteurLaser.capturerDistanceLaser();
+    cameraPosition.downLed(); 
+    String message = String(capteurLaser.mesureLaser);
+    Serial3.write(message.c_str(), message.length());
+  }
   return false;
+}
+
+
+
+void aimToDoor(){
+  int v = 160;
+  if (sensRotationArc == 'd'){
+    controleMoteur.goRight(v);
+  }else if (sensRotationArc == 'g'){
+    controleMoteur.goLeft(v);
+  }else{
+    activateRotation = false;
+    return -1;
+  }
+  delay(200);
+  controleMoteur.goForward(0);
+  activateRotation = false;
+  return 1;
+  
 }
 
 
@@ -118,21 +148,42 @@ boolean decodage_uart(String msg){
  * 
  * Lancent les différentes fonctions afin de controller le robot
  */
+//Communication UART
+bool UART = true;
 
 void loop() {
-  //Communication UART
-  if (Serial3.available()) {
+  //capteur laser
+  capteurLaser.capturerDistanceLaser();
+
+  if (Serial3.available() && UART) {
     String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
     Serial.println(commandFromJetson);
-    String message = "Hello jetson, voici le message que tu m'as envoye "+commandFromJetson +"\n";
-    Serial3.write(message.c_str(), message.length());
-
+    //lors du décodage on démarre les fonctionnnalités 
     decodage_uart(commandFromJetson);
   }
 
   if(activateRotation){
-    Serial.println(valueRotationArc);
-    Serial.println(sensRotationArc);
+    int v = 130;
+    if (capteurLaser.mesureLaser>100 && valueRotationArc < 70){
+      controleMoteur.goForward(v);
+      delay(1000);
+      controleMoteur.goForward(0);
+      activateRotation = false;
+    } else if(0<=valueRotationArc && valueRotationArc<25 && capteurLaser.mesureLaser < 30){
+      controleMoteur.goForward(v);
+      while (capteurLaser.mesureLaser < 5){
+        capteurLaser.capturerDistanceLaser();
+      }
+      controleMoteur.goForward(0);
+      activateRotation = false;
+    } else if (0<=valueRotationArc && valueRotationArc<35 && capteurLaser.mesureLaser > 10){
+      controleMoteur.goForward(v);
+      delay(300);
+      controleMoteur.goForward(0);
+      activateRotation = false;
+    }else{
+      aimToDoor();     
+    }
   }
   
   
@@ -142,8 +193,7 @@ void loop() {
   //capteurDistance.CapturerDistance();
 
   
-  //capteur laser
-  //capteurLaser.capturerDistanceLaser();
+  
 
 
   //stratégie
@@ -160,10 +210,6 @@ void loop() {
   Serial.print(" ultrason : ");
   Serial.println(capteurDistance.distance);*/
 
-  
-  //controleMoteur.goForward(vitesse);
-  //eviterObstacle();
-  
   
 }
 
