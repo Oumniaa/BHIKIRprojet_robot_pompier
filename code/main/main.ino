@@ -30,6 +30,7 @@ int valueRotationArc = 0;
 int distanceMiddleDoor = 0;
 char sensRotationArc = 'a';
 boolean activateRotation = false;
+int distance;
 
 /**
  * setup
@@ -86,7 +87,7 @@ int get_value_distance(String msg){
  */
 boolean decodage_commande_moteur(String msg){
   int value;
-  if (msg.charAt(1) == 'd' | msg.charAt(1) == 'g' |  msg.charAt(1) == 'a'){
+  if (msg.charAt(1) == 'd' | msg.charAt(1) == 'g' |  msg.charAt(1) == 'a' |  msg.charAt(1) == 'b'){
     activateRotation  = true;
     sensRotationArc = msg.charAt(1);
     valueRotationArc = get_value_moteur(msg);
@@ -106,13 +107,18 @@ boolean decodage_uart(String msg){
   }
   
   if (msg.equals("distance")){
-    capteurLaser.capturerDistanceLaser();
-    cameraPosition.downLed(); 
-    String message = String(capteurLaser.mesureLaser);
-    Serial3.write(message.c_str(), message.length());
+    send_distance();
   }
   return false;
 }
+
+/*
+ * envoyer la valeur de la distance
+ */
+ void send_distance(){
+    String message = (String)distance  + "\n";
+    Serial3.write(message.c_str(), message.length());
+ }
 
 /*
  * faire fonctionnner les moteurs selon le msg de la jetson nano
@@ -124,8 +130,11 @@ void rotationMoteur(){
   }else if (sensRotationArc == 'g'){
     controleMoteur.goLeft(v);
   }else if (sensRotationArc == 'a'){
-    controleMoteur.goForward(v);
-  } else {
+    controleMoteur.goForward(250);
+  }else if (sensRotationArc == 'b'){
+    controleMoteur.goForward(250);
+    delay(1500);
+  }else {
     activateRotation = false;
     return -1;
   }
@@ -144,7 +153,7 @@ void rotationMoteur(){
 
 void loop() {
   capteurLaser.capturerDistanceLaser();
-
+  distance = capteurLaser.mesureLaser;
   if (Serial3.available() && UART) {
     String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
     Serial.println(commandFromJetson);
@@ -154,6 +163,7 @@ void loop() {
   if(activateRotation){
     rotationMoteur();    
   }
+  
  
   //capteur ultrason
   //capteurDistance.CapturerDistance();
