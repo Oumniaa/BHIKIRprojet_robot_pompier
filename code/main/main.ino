@@ -66,7 +66,7 @@ int get_value_moteur(String msg){
 
 /*
  * lire la distance que l'on doit placer dans la variable distance (afin de faire fonctionnner les moteurs un certain temps 
- */
+ *
 int get_value_distance(String msg){
   String nb = "";
   int i = 3;
@@ -79,7 +79,8 @@ int get_value_distance(String msg){
   }
   return nb.toInt();
 }
-
+*
+ */
 
 /*
  * on a reçu un message correspondant à une information pour la commande de nos moteur  
@@ -91,7 +92,6 @@ boolean decodage_commande_moteur(String msg){
     activateRotation  = true;
     sensRotationArc = msg.charAt(1);
     valueRotationArc = get_value_moteur(msg);
-    distanceMiddleDoor = get_value_distance(msg);
   } else {
     return false;
   }
@@ -106,7 +106,7 @@ boolean decodage_uart(String msg){
     return decodage_commande_moteur(msg);
   }
   
-  if (msg.equals("distance")){
+  if (msg.charAt(0) == '2'){
     send_distance();
   }
   return false;
@@ -116,7 +116,7 @@ boolean decodage_uart(String msg){
  * envoyer la valeur de la distance
  */
  void send_distance(){
-    String message = (String)distance  + "\n";
+    String message = (String)distance + "\n";
     Serial3.write(message.c_str(), message.length());
  }
 
@@ -131,9 +131,10 @@ void rotationMoteur(){
     controleMoteur.goLeft(v);
   }else if (sensRotationArc == 'a'){
     controleMoteur.goForward(250);
+    delay(250);
   }else if (sensRotationArc == 'b'){
     controleMoteur.goForward(250);
-    delay(1500);
+    delay(1000);
   }else {
     activateRotation = false;
     return -1;
@@ -154,9 +155,9 @@ void rotationMoteur(){
 void loop() {
   capteurLaser.capturerDistanceLaser();
   distance = capteurLaser.mesureLaser;
+  Serial.println(distance);
   if (Serial3.available() && UART) {
     String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
-    Serial.println(commandFromJetson);
     decodage_uart(commandFromJetson);
   }
 
