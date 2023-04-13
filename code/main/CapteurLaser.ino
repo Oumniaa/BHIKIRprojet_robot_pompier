@@ -17,7 +17,7 @@ void CapteurLaser::capturerDistanceLaser() {
     mesureLaser = mesure.RangeMilliMeter/10;
   }
   else {
-    mesureLaser = -1;
+    mesureLaser = 0;
     
   }
 }

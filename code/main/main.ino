@@ -3,6 +3,7 @@
 #include "CameraPosition.h"
 #include "CapteurLaser.h"
 #include "ControleMoteur.h"
+#include "easyRun.h"
 
 //pin du capteur de distance 
 const int echo = 13;
@@ -32,6 +33,13 @@ char sensRotationArc = 'a';
 boolean activateRotation = false;
 int distance;
 
+fullMachine sm(f_start);
+
+int time_off = 0;
+
+
+
+
 /**
  * setup
  * 
@@ -43,11 +51,11 @@ void setup() {
   while(!Serial){
     ;
   }
+  /*
   Serial3.begin(115200);
   while(!Serial3){
     ;
-  }
-  cameraPosition.upLed();  
+  }*/
 }
 
 /*
@@ -101,15 +109,14 @@ boolean decodage_commande_moteur(String msg){
  * reception d'un message UART 
  * Analyse du premier caractère pour savoir à quel demande correspond ce msg
  */
-boolean decodage_uart(String msg){
+void decodage_uart(String msg){
   if (msg.charAt(0) == '1'){
-    return decodage_commande_moteur(msg);
+    decodage_commande_moteur(msg);
   }
   
   if (msg.charAt(0) == '2'){
     send_distance();
   }
-  return false;
 }
 
 /*
@@ -117,55 +124,123 @@ boolean decodage_uart(String msg){
  */
  void send_distance(){
     String message = (String)distance + "\n";
-    Serial3.write(message.c_str(), message.length());
+    //Serial3.write(message.c_str(), message.length());
+    Serial.write(message.c_str(), message.length());
  }
+ 
+
+ void turn_left(){
+  if(distance < 100){
+    controleMoteur.goLeft(160);
+    delay(450);
+    controleMoteur.goForward(250);
+    delay(250);
+    controleMoteur.goRight(160);
+    delay(250);
+    controleMoteur.goBack(250);
+    delay(250);
+  } else {
+    controleMoteur.goLeft(160);
+    delay(250);
+  }
+ }
+
+ 
+ void turn_right(){
+  if(distance < 100){
+    controleMoteur.goRight(160);
+    delay(450);
+    controleMoteur.goForward(250);
+    delay(250);
+    controleMoteur.goLeft(160);
+    delay(250);
+    controleMoteur.goBack(250);
+    delay(250);
+  }else{
+    controleMoteur.goRight(160);
+    delay(250);
+  }
+ }
+
+void go_forward(){
+  controleMoteur.goForward(250);
+  sm.next(stop_go, time_off);
+}
+
+void go_back(){
+  controleMoteur.goBack(250);
+  sm.next(stop_go, time_off);
+}
+
+void stop_go(){
+  controleMoteur.goForward(0);
+  activateRotation = false; 
+  sm.next(f_start);
+}
 
 /*
  * faire fonctionnner les moteurs selon le msg de la jetson nano
  */
 void rotationMoteur(){
-  int v = 160;
   if (sensRotationArc == 'd'){
-    controleMoteur.goRight(v);
+    sm.next(turn_right);
   }else if (sensRotationArc == 'g'){
-    controleMoteur.goLeft(v);
+    sm.next(turn_left);
   }else if (sensRotationArc == 'a'){
-    controleMoteur.goForward(250);
-    delay(250);
+    time_off = 250;
+    sm.next(go_forward);
   }else if (sensRotationArc == 'b'){
-    controleMoteur.goForward(250);
-    delay(1000);
+    time_off = 1000;
+    sm.next(go_forward);
+  }else if (sensRotationArc == 'l'){
+    time_off = 500;
+    sm.next(go_back);
   }else {
     activateRotation = false;
-    return -1;
   }
-  delay(250);
-  controleMoteur.goForward(0);
-  activateRotation = false;
-  return 1;
 }
 
 
-/**
- * Fontion main 
- * 
- * Lancent les différentes fonctions afin de controller le robot
- */
-
-void loop() {
+void refresh_value_distance(){
+  Serial.println("refresh_value_distance");
   capteurLaser.capturerDistanceLaser();
   distance = capteurLaser.mesureLaser;
+  Serial.println("End refresh_value_distance");
+}
+periodicTask pt1(refresh_value_distance, 1000); //To be executed each 1000 ms
+
+
+void send_value_distance(){
   Serial.println(distance);
-  if (Serial3.available() && UART) {
-    String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
+}
+
+
+void read_uart_data(){
+  Serial.print("read_uart_data");
+  //if (Serial3.available() && UART) {
+  if (Serial.available() && UART) {
+    //String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
+    String commandFromJetson = Serial.readStringUntil(TERMINATOR);
     decodage_uart(commandFromJetson);
   }
+  Serial.print("end read_uart_data");
+}
+periodicTask pt2(read_uart_data, 1000); //To be executed each 1000 ms
 
+
+void f_start(){
+  //envoyer la valeur de la distance 
   if(activateRotation){
-    rotationMoteur();    
+    sm.next(rotationMoteur);
   }
+}
+
+
+//lance main en fonction de base
+
+void loop() {
+   easyRun();
   
- 
   //capteur ultrason
   //capteurDistance.CapturerDistance();
 
