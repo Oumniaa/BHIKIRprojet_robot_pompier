@@ -5,6 +5,15 @@
 #include "ControleMoteur.h"
 #include "easyRun.h"
 
+
+#define LOX1_ADDRESS 0x30
+#define LOX2_ADDRESS 0x31
+
+// set the pins to shutdown
+#define SHT_LOX1 2
+#define SHT_LOX2 3
+
+
 //pin du capteur de distance 
 const int echo = 13;
 const int trig = 12;
@@ -18,7 +27,7 @@ const int M1B = 7;
 
 bool UART = true;
 
-CapteurDistance capteurDistance (trig, echo);
+CapteurDistance capteurDistance(trig, echo);
 
 CameraPosition cameraPosition(pinLedRougeCamera);
 
@@ -31,11 +40,15 @@ int valueRotationArc = 0;
 int distanceMiddleDoor = 0;
 char sensRotationArc = 'a';
 boolean activateRotation = false;
-int distance;
+int distance_left = 0;
+int distance_right = 0;
+int distance = 0;
+
 
 fullMachine sm(f_start);
 
 int time_off = 0;
+boolean in_move = false;
 
 
 
@@ -51,11 +64,21 @@ void setup() {
   while(!Serial){
     ;
   }
-  /*
+  
   Serial3.begin(115200);
   while(!Serial3){
     ;
-  }*/
+  }
+  
+  while (! Serial) { delay(1); }
+
+  pinMode(SHT_LOX1, OUTPUT);
+  pinMode(SHT_LOX2, OUTPUT);
+
+
+  digitalWrite(SHT_LOX1, LOW);
+  digitalWrite(SHT_LOX2, LOW);
+  setID();
 }
 
 /*
@@ -119,46 +142,49 @@ void decodage_uart(String msg){
   }
 }
 
-/*
- * envoyer la valeur de la distance
- */
- void send_distance(){
-    String message = (String)distance + "\n";
-    //Serial3.write(message.c_str(), message.length());
-    Serial.write(message.c_str(), message.length());
- }
+
  
 
- void turn_left(){
-  if(distance < 100){
-    controleMoteur.goLeft(160);
-    delay(450);
-    controleMoteur.goForward(250);
-    delay(250);
-    controleMoteur.goRight(160);
-    delay(250);
-    controleMoteur.goBack(250);
-    delay(250);
+void left(){
+  controleMoteur.goLeft(160);
+}
+void rigth(){
+  controleMoteur.goRight(160);
+}
+void back(){
+  controleMoteur.goBack(250);
+}
+void front(){
+  controleMoteur.goForward(250);
+}
+
+asyncTask turn1;
+asyncTask turn2;
+asyncTask turn3;
+asyncTask turn4;
+void turn_left(){
+  if(distance_left > 100){
+    turn1.set(left, 0);//+450
+    turn2.set(front, 450);//+250
+    turn3.set(rigth, 900);//+250
+    turn4.set(back, 1150);//+250
+    sm.next(stop_go, 1400);
   } else {
-    controleMoteur.goLeft(160);
-    delay(250);
+    turn1.set(left, 0);
+    sm.next(stop_go, 250);
   }
- }
+}
 
- 
- void turn_right(){
-  if(distance < 100){
-    controleMoteur.goRight(160);
-    delay(450);
-    controleMoteur.goForward(250);
-    delay(250);
-    controleMoteur.goLeft(160);
-    delay(250);
-    controleMoteur.goBack(250);
-    delay(250);
+void turn_right(){
+  if(distance_left > 100){
+    turn1.set(rigth, 0);//+450
+    turn2.set(front, 450);//+250
+    turn3.set(left, 900);//+250
+    turn4.set(back, 1150);//+250
+    sm.next(stop_go, 1400);
   }else{
-    controleMoteur.goRight(160);
-    delay(250);
+    turn1.set(rigth, 0);//+250
+    sm.next(stop_go, 250);
   }
  }
 
@@ -172,16 +198,10 @@ void go_back(){
   sm.next(stop_go, time_off);
 }
 
-void stop_go(){
-  controleMoteur.goForward(0);
-  activateRotation = false; 
-  sm.next(f_start);
-}
 
-/*
- * faire fonctionnner les moteurs selon le msg de la jetson nano
- */
 void rotationMoteur(){
+  in_move = true;
+  send_in_move();
   if (sensRotationArc == 'd'){
     sm.next(turn_right);
   }else if (sensRotationArc == 'g'){
@@ -197,50 +217,95 @@ void rotationMoteur(){
     sm.next(go_back);
   }else {
     activateRotation = false;
+    in_move = false;
   }
 }
 
+void stop_go(){
+  controleMoteur.goForward(0);
+  activateRotation = false; 
+  in_move = false;
+  sm.next(f_start);
+}
+
+void send_distance(){
+    String message = "distance="+(String)distance + "\n";
+    Serial3.write(message.c_str(), message.length());
+}
 
 void refresh_value_distance(){
-  Serial.println("refresh_value_distance");
   capteurLaser.capturerDistanceLaser();
-  distance = capteurLaser.mesureLaser;
-  Serial.println("End refresh_value_distance");
-}
-periodicTask pt1(refresh_value_distance, 1000); //To be executed each 1000 ms
-
-
-void send_value_distance(){
-  Serial.println(distance);
+  distance_left = capteurLaser.get_mesure_cap_1();
+  distance_right = capteurLaser.get_mesure_cap_2();
 }
 
+void refresh_value_distance_and_send(){
+  refresh_value_distance();
+  distance = (distance_right+distance_left)/2;
+  send_distance();
+}
+periodicTask pt1(refresh_value_distance_and_send, 200); //To be executed each 200 ms
 
 void read_uart_data(){
-  Serial.print("read_uart_data");
-  //if (Serial3.available() && UART) {
-  if (Serial.available() && UART) {
-    //String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
-    String commandFromJetson = Serial.readStringUntil(TERMINATOR);
+  if (Serial3.available() && UART) {
+    Serial.print("on decode");
+    String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
     decodage_uart(commandFromJetson);
   }
-  Serial.print("end read_uart_data");
 }
-periodicTask pt2(read_uart_data, 1000); //To be executed each 1000 ms
+periodicTask pt2(read_uart_data, 50); //To be executed each 200 ms
+
+void face_wall(){
+  int ratio = distance_left - distance_right;
+  in_move = true;
+  send_in_move();
+  long start_time = millis();
+  if(distance < 100){
+    while(abs(ratio) > 2) {
+      Serial.print("bloque");
+      if(ratio < 0){
+        left();
+      }else{
+        rigth();
+      }
+      refresh_value_distance();
+      ratio = distance_left - distance_right;
+      if (start_time - millis() > 4000){
+        break;
+      }
+    }
+  }
+  in_move = false;
+  controleMoteur.goForward(0);
+}
+periodicTask pt3(face_wall, 4000);
+
+void send_in_move(){
+  if (!Serial3.available()){
+    Serial.print(in_move);
+    String message = "inmove="+(String)in_move + "\n";
+    Serial3.write(message.c_str(), message.length());
+  }
+}
+periodicTask pt4(send_in_move, 300);
 
 
 void f_start(){
-  //envoyer la valeur de la distance 
-  if(activateRotation){
+   //envoyer la valeur de la distance 
+   if(activateRotation){
     sm.next(rotationMoteur);
-  }
+   }  
 }
+
+
+
 
 
 //lance main en fonction de base
 
 void loop() {
-   easyRun();
-  
+  easyRun();
+
   //capteur ultrason
   //capteurDistance.CapturerDistance();
 
@@ -252,6 +317,8 @@ void loop() {
   Serial.print(" ultrason : ");
   Serial.println(capteurDistance.distance);*/
 }
+
+
 
 
 

@@ -7,9 +7,10 @@ class CapteurLaser
   private :
 
   public :
-   int mesureLaser;
    CapteurLaser();
    void capturerDistanceLaser();
+   int get_mesure_cap_1();
+   int get_mesure_cap_2();
 };
 
 #endif 
