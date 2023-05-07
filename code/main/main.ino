@@ -4,6 +4,12 @@
 #include "CapteurLaser.h"
 #include "ControleMoteur.h"
 #include "easyRun.h"
+#include <Wire.h>
+#include <Servo.h>
+#include <Adafruit_PWMServoDriver.h>
+#include <math.h>
+#include<Servo.h>
+
 
 
 #define LOX1_ADDRESS 0x30
@@ -13,12 +19,21 @@
 #define SHT_LOX1 2
 #define SHT_LOX2 3
 
+// Creat object to represent PCA9685 at default I2C address
+#define SERVOMIN 500   // Position minimale
+#define SERVOMAX 2500  // Position maximale
+#define SER0 0         //Servo Motor 0 on connector 0
+#define SER1 1         //Servo Motor 1 on connector 1
+#define SER2 2         //Servo Motor 2 on connector 2
+#define SER4 4         //Servo Motor 2 on connector 2
+#define SER5 5         //Servo Motor 2 on connector 3
+#define valeur 20
+#define RAD_TO_DEG 57
+
 
 //pin du capteur de distance 
 const int echo = 13;
 const int trig = 12;
-
-const int pinLedRougeCamera = 48;
 
 const int M2A = 4;
 const int M2B = 5;
@@ -26,14 +41,6 @@ const int M1A = 6;
 const int M1B = 7;
 
 bool UART = true;
-
-CapteurDistance capteurDistance(trig, echo);
-
-CameraPosition cameraPosition(pinLedRougeCamera);
-
-CapteurLaser capteurLaser;
-
-ControleMoteur controleMoteur(M1A,M1B,M2A,M2B);
 
 const char TERMINATOR = '|';
 int valueRotationArc = 0;
@@ -43,15 +50,46 @@ boolean activateRotation = false;
 int distance_left = 0;
 int distance_right = 0;
 int distance = 0;
-
-
-fullMachine sm(f_start);
-
 int time_off = 0;
 boolean in_move = false;
 
+//analogie angle impulsion
+int IMP[valeur] = { 2500, 2400, 2300, 2200, 2100, 2000, 1900, 1800, 1700, 1600, 1500, 1400, 1300, 1200, 1100 };
+int ANG[valeur] = { 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 121, 132, 143, 154 };
+
+// just the three ones connected to the PCA9685
+int pwm0;
+int pwm1;
+int pwm2;
+
+// define global variables (Point to move)
+int Xhand;  // X position of hand
+int Yhand;  // y position of hand
+int PosPoint;
+
+// pre calculations
+int humerus = 165;  // L1(mm)
+int ulna = 110;     // L2(mm)
+
+float hum_sq = humerus * humerus;  // humurus length squared
+float uln_sq = ulna * ulna;        // ulna length squared
+
+//Clump code
+Servo servo1;
+Servo servo2;
+int potPin1 = A0;  // potentiomètre 1 connecté à la broche A0
+int potPin2 = A1;  // potentiomètre 2 connecté à la broche A1
 
 
+//CapteurDistance capteurDistance(trig, echo);
+
+CapteurLaser capteurLaser;
+
+ControleMoteur controleMoteur(M1A,M1B,M2A,M2B);
+
+Adafruit_PWMServoDriver pca9685 = Adafruit_PWMServoDriver(0x40);
+
+fullMachine sm(f_start);
 
 /**
  * setup
@@ -79,6 +117,12 @@ void setup() {
   digitalWrite(SHT_LOX1, LOW);
   digitalWrite(SHT_LOX2, LOW);
   setID();
+
+  servo1.attach(9);  // servomoteur 1 connecté à la broche 9
+  servo2.attach(10); // servomoteur 2 connecté à la broche 10
+  Serial.println("PCA9685 Servo Test");
+  pca9685.begin();
+  pca9685.setPWMFreq(50);
 }
 
 /*
@@ -94,24 +138,6 @@ int get_value_moteur(String msg){
   }
   return nb.toInt();
 }
-
-/*
- * lire la distance que l'on doit placer dans la variable distance (afin de faire fonctionnner les moteurs un certain temps 
- *
-int get_value_distance(String msg){
-  String nb = "";
-  int i = 3;
-  while(msg.charAt(i+1) != '!'){
-    i++;
-  }
-  i=i+2;
-  for(i;i< msg.length();i++){
-    nb.concat(msg.charAt(i));
-  }
-  return nb.toInt();
-}
-*
- */
 
 /*
  * on a reçu un message correspondant à une information pour la commande de nos moteur  
@@ -141,9 +167,6 @@ void decodage_uart(String msg){
     send_distance();
   }
 }
-
-
- 
 
 void left(){
   controleMoteur.goLeft(160);
@@ -281,6 +304,7 @@ void face_wall(){
 periodicTask pt3(face_wall, 4000);
 
 void send_in_move(){
+  
   if (!Serial3.available()){
     Serial.print(in_move);
     String message = "inmove="+(String)in_move + "\n";
@@ -297,25 +321,131 @@ void f_start(){
    }  
 }
 
-
-
-
-
 //lance main en fonction de base
 
-void loop() {
-  easyRun();
+//  Move the arm to specified x,y position
+void moveArm(float x, float y, float z) {
 
-  //capteur ultrason
-  //capteurDistance.CapturerDistance();
+  // calculate required servo angles using inverse kinematics
+  Serial.println("Calculate servo angles:");
 
-  //stratégie
-  //position 
+  // Work out the length of an imaginery line from the arms shoulder to the x,y position and call it B
+  // using pythagoras theorem - length of b squared = x sqared + y squared
+  float B = sqrt((x * x) + (y * y));
+  Serial.print("  B = ");
+  Serial.println(B);
+
+  // Calculate the angle of the imaginary line from the x axis and call it QA
+  float QA = atan2(y, x);
+  Serial.print("  QA = ");
+  Serial.println(QA);
+
+  // Calculate the angle from the imaginary line to the humerus (using cosine rule) and call it QB
+  float B_sq = B * B;  // B squared
+  float tvala = hum_sq - uln_sq + B_sq;
+  float tvalb = 2.0 * humerus * B;
+  float QB = acos(tvala / tvalb);
+  Serial.print("  QB = ");
+  Serial.println(QB);
+
+  // Calculate angle of shoulder servo by ading the two calculated angles together
+  float angleS = QA + QB;
+  Serial.print("  angleS = ");
+  Serial.println(angleS);
+
+  // Calculate angle of elbow servo
+  // this is done using the cosine rule
+  tvala = hum_sq + uln_sq - B_sq;
+  tvalb = 2.0 * humerus * ulna;
+  float angleE = acos(tvala / tvalb);
+  Serial.print("  angleE = ");
+  Serial.println(angleE);
+
+ //calcul angle base with hpothenus
+  int Rz = sqrt(z * z + x * x);
+  Serial.println("Rz = ");
+  Serial.println(Rz);
+   //float angleB = asin(z / Rz);
+  float angleB = atan2(y, x);
+  Serial.print("  angleB = ");
+  Serial.println(angleB);
+
+  //Calculate angle base
+  //float angleB= asin(tvala / hum_sq);
+
+  // convert angles from radians to degrees
+  angleE = angleE * RAD_TO_DEG;
+  angleS = angleS * RAD_TO_DEG;
+  angleB = angleB * RAD_TO_DEG;
+
+
+  Serial.print("moving arm to x=");
+  Serial.print(x);
+  Serial.print(" Y=");
+  Serial.println(y);
+  Serial.print(" Z=");
+  Serial.println(z);
+  Serial.print("  angleS in degrees = ");
+  Serial.println(angleS);
+  Serial.print("  angleE in degrees = ");
+  Serial.println(angleE);
+  Serial.print("  angleB in degrees = ");
+  Serial.println(angleB);
+  moveServos(angleS, angleE, angleB);  // move the servos
+}
+
+
+
+
+// Adjust the mesure
+void moveServos(int s, int e, int b) {
+
+  // adjust shoulder servo
+  s = s * 0.9;
+
+  // adjust elbow servo
+  e = e * 0.8;
+
+  // adjust base servo
+  b = b * 0, 8;
   
-  /*cameraPosition.motionBurst();
-  cameraPosition.getX();
-  Serial.print(" ultrason : ");
-  Serial.println(capteurDistance.distance);*/
+  pca9685.writeMicroseconds(0, angle_to_pulse(b));
+  delay(1000);
+  pca9685.writeMicroseconds(1, angle_to_pulse(s));
+  delay(1000);
+  pca9685.writeMicroseconds(2, angle_to_pulse(e));
+  delay(1000);
+  
+  
+  delay(30);
+}
+
+// need another angle to pulse for sg90
+
+int angle_to_pulse(int angle) {
+  return 2500 - angle * 9;
+}
+
+
+void arm() {
+  //X,Y,Z
+  //moveArm(100, -120, 130);
+  pca9685.writeMicroseconds(0, 2500 - 40 * 9);
+  pca9685.writeMicroseconds(1, 2500 - 0 * 9);
+  pca9685.writeMicroseconds(2, 2500 - 120 * 9);
+  
+  /*int pos1 = map(analogRead(potPin1), 0, 1023, 0, 180); // Lecture de la valeur du potentiomètre 1 et la transformation de la plage de valeurs en 0-180 degrés
+  int pos2 = map(analogRead(potPin2), 0, 1023, 0, 180); // Lecture de la valeur du potentiomètre 2 et la transformation de la plage de valeurs en 0-180 degrés
+  servo1.write(pos1); // Déplacement du servo1 à la position lue depuis le potentiomètre 1
+  servo2.write(pos2); // Déplacement du servo2 à la position lue depuis le potentiomètre 2*/
+
+}
+
+
+
+void loop() {
+  arm();
+  //easyRun();
 }
 
 
