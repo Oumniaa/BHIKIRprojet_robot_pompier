@@ -145,7 +145,7 @@ int get_value_moteur(String msg){
  */
 boolean decodage_commande_moteur(String msg){
   int value;
-  if (msg.charAt(1) == 'd' | msg.charAt(1) == 'g' |  msg.charAt(1) == 'a' |  msg.charAt(1) == 'b'){
+  if (msg.charAt(1) == 'd' | msg.charAt(1) == 'g' |  msg.charAt(1) == 'a' |  msg.charAt(1) == 'b'|  msg.charAt(1) == 'l'){
     activateRotation  = true;
     sensRotationArc = msg.charAt(1);
     valueRotationArc = get_value_moteur(msg);
@@ -168,6 +168,7 @@ void decodage_uart(String msg){
   }
 }
 
+
 void left(){
   controleMoteur.goLeft(160);
 }
@@ -186,39 +187,23 @@ asyncTask turn2;
 asyncTask turn3;
 asyncTask turn4;
 void turn_left(){
-  if(distance_left > 100){
-    turn1.set(left, 0);//+450
-    turn2.set(front, 450);//+250
-    turn3.set(rigth, 900);//+250
-    turn4.set(back, 1150);//+250
-    sm.next(stop_go, 1400);
-  } else {
-    turn1.set(left, 0);
-    sm.next(stop_go, 250);
-  }
+  turn1.set(left, 0);
+  sm.next(stop_go, 250);
 }
 
 void turn_right(){
-  if(distance_left > 100){
-    turn1.set(rigth, 0);//+450
-    turn2.set(front, 450);//+250
-    turn3.set(left, 900);//+250
-    turn4.set(back, 1150);//+250
-    sm.next(stop_go, 1400);
-  }else{
-    turn1.set(rigth, 0);//+250
-    sm.next(stop_go, 250);
-  }
+  turn1.set(rigth, 0);//+250
+  sm.next(stop_go, 250);
  }
 
 void go_forward(){
-  controleMoteur.goForward(250);
-  sm.next(stop_go, time_off);
+  turn1.set(front, 0);//+250
+  sm.next(stop_go, 1000);
 }
 
 void go_back(){
-  controleMoteur.goBack(250);
-  sm.next(stop_go, time_off);
+  turn1.set(back, 0);//+250
+  sm.next(stop_go, 1000);
 }
 
 
@@ -230,14 +215,11 @@ void rotationMoteur(){
   }else if (sensRotationArc == 'g'){
     sm.next(turn_left);
   }else if (sensRotationArc == 'a'){
-    time_off = 250;
     sm.next(go_forward);
   }else if (sensRotationArc == 'b'){
-    time_off = 1000;
     sm.next(go_forward);
   }else if (sensRotationArc == 'l'){
-    time_off = 500;
-    sm.next(go_back);
+    sm.next(go_forward);
   }else {
     activateRotation = false;
     in_move = false;
@@ -247,7 +229,6 @@ void rotationMoteur(){
 void stop_go(){
   controleMoteur.goForward(0);
   activateRotation = false; 
-  in_move = false;
   sm.next(f_start);
 }
 
@@ -260,32 +241,32 @@ void refresh_value_distance(){
   capteurLaser.capturerDistanceLaser();
   distance_left = capteurLaser.get_mesure_cap_1();
   distance_right = capteurLaser.get_mesure_cap_2();
+  distance = (distance_right+distance_left)/2;
+  Serial.println(distance);
 }
 
 void refresh_value_distance_and_send(){
   refresh_value_distance();
-  distance = (distance_right+distance_left)/2;
   send_distance();
 }
 periodicTask pt1(refresh_value_distance_and_send, 200); //To be executed each 200 ms
 
 void read_uart_data(){
   if (Serial3.available() && UART) {
-    Serial.print("on decode");
     String commandFromJetson = Serial3.readStringUntil(TERMINATOR);
     decodage_uart(commandFromJetson);
   }
 }
-periodicTask pt2(read_uart_data, 50); //To be executed each 200 ms
+periodicTask pt2(read_uart_data, 100);
 
 void face_wall(){
   int ratio = distance_left - distance_right;
   in_move = true;
   send_in_move();
   long start_time = millis();
+  
   if(distance < 100){
     while(abs(ratio) > 2) {
-      Serial.print("bloque");
       if(ratio < 0){
         left();
       }else{
@@ -293,7 +274,8 @@ void face_wall(){
       }
       refresh_value_distance();
       ratio = distance_left - distance_right;
-      if (start_time - millis() > 4000){
+      int c_time = millis();
+      if ((start_time - c_time) > 4000){
         break;
       }
     }
@@ -301,151 +283,32 @@ void face_wall(){
   in_move = false;
   controleMoteur.goForward(0);
 }
-periodicTask pt3(face_wall, 4000);
+//periodicTask pt3(face_wall, 4000);
 
 void send_in_move(){
-  
   if (!Serial3.available()){
-    Serial.print(in_move);
     String message = "inmove="+(String)in_move + "\n";
     Serial3.write(message.c_str(), message.length());
   }
 }
-periodicTask pt4(send_in_move, 300);
+periodicTask pt4(send_in_move, 100);
 
 
 void f_start(){
    //envoyer la valeur de la distance 
    if(activateRotation){
-    sm.next(rotationMoteur);
-   }  
+      sm.next(rotationMoteur);
+   }else{
+      in_move = false;
+      send_in_move();
+   }
 }
 
 //lance main en fonction de base
 
-//  Move the arm to specified x,y position
-void moveArm(float x, float y, float z) {
-
-  // calculate required servo angles using inverse kinematics
-  Serial.println("Calculate servo angles:");
-
-  // Work out the length of an imaginery line from the arms shoulder to the x,y position and call it B
-  // using pythagoras theorem - length of b squared = x sqared + y squared
-  float B = sqrt((x * x) + (y * y));
-  Serial.print("  B = ");
-  Serial.println(B);
-
-  // Calculate the angle of the imaginary line from the x axis and call it QA
-  float QA = atan2(y, x);
-  Serial.print("  QA = ");
-  Serial.println(QA);
-
-  // Calculate the angle from the imaginary line to the humerus (using cosine rule) and call it QB
-  float B_sq = B * B;  // B squared
-  float tvala = hum_sq - uln_sq + B_sq;
-  float tvalb = 2.0 * humerus * B;
-  float QB = acos(tvala / tvalb);
-  Serial.print("  QB = ");
-  Serial.println(QB);
-
-  // Calculate angle of shoulder servo by ading the two calculated angles together
-  float angleS = QA + QB;
-  Serial.print("  angleS = ");
-  Serial.println(angleS);
-
-  // Calculate angle of elbow servo
-  // this is done using the cosine rule
-  tvala = hum_sq + uln_sq - B_sq;
-  tvalb = 2.0 * humerus * ulna;
-  float angleE = acos(tvala / tvalb);
-  Serial.print("  angleE = ");
-  Serial.println(angleE);
-
- //calcul angle base with hpothenus
-  int Rz = sqrt(z * z + x * x);
-  Serial.println("Rz = ");
-  Serial.println(Rz);
-   //float angleB = asin(z / Rz);
-  float angleB = atan2(y, x);
-  Serial.print("  angleB = ");
-  Serial.println(angleB);
-
-  //Calculate angle base
-  //float angleB= asin(tvala / hum_sq);
-
-  // convert angles from radians to degrees
-  angleE = angleE * RAD_TO_DEG;
-  angleS = angleS * RAD_TO_DEG;
-  angleB = angleB * RAD_TO_DEG;
-
-
-  Serial.print("moving arm to x=");
-  Serial.print(x);
-  Serial.print(" Y=");
-  Serial.println(y);
-  Serial.print(" Z=");
-  Serial.println(z);
-  Serial.print("  angleS in degrees = ");
-  Serial.println(angleS);
-  Serial.print("  angleE in degrees = ");
-  Serial.println(angleE);
-  Serial.print("  angleB in degrees = ");
-  Serial.println(angleB);
-  moveServos(angleS, angleE, angleB);  // move the servos
-}
-
-
-
-
-// Adjust the mesure
-void moveServos(int s, int e, int b) {
-
-  // adjust shoulder servo
-  s = s * 0.9;
-
-  // adjust elbow servo
-  e = e * 0.8;
-
-  // adjust base servo
-  b = b * 0, 8;
-  
-  pca9685.writeMicroseconds(0, angle_to_pulse(b));
-  delay(1000);
-  pca9685.writeMicroseconds(1, angle_to_pulse(s));
-  delay(1000);
-  pca9685.writeMicroseconds(2, angle_to_pulse(e));
-  delay(1000);
-  
-  
-  delay(30);
-}
-
-// need another angle to pulse for sg90
-
-int angle_to_pulse(int angle) {
-  return 2500 - angle * 9;
-}
-
-
-void arm() {
-  //X,Y,Z
-  //moveArm(100, -120, 130);
-  pca9685.writeMicroseconds(0, 2500 - 40 * 9);
-  pca9685.writeMicroseconds(1, 2500 - 0 * 9);
-  pca9685.writeMicroseconds(2, 2500 - 120 * 9);
-  
-  /*int pos1 = map(analogRead(potPin1), 0, 1023, 0, 180); // Lecture de la valeur du potentiomètre 1 et la transformation de la plage de valeurs en 0-180 degrés
-  int pos2 = map(analogRead(potPin2), 0, 1023, 0, 180); // Lecture de la valeur du potentiomètre 2 et la transformation de la plage de valeurs en 0-180 degrés
-  servo1.write(pos1); // Déplacement du servo1 à la position lue depuis le potentiomètre 1
-  servo2.write(pos2); // Déplacement du servo2 à la position lue depuis le potentiomètre 2*/
-
-}
-
-
 
 void loop() {
-  arm();
-  //easyRun();
+  easyRun();
 }
 
 
